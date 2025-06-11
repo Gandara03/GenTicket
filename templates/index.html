@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Generador de Tickets - Gemini (Web)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <style>
+        body {
+            background-color: #23272f;
+            color: #fff;
+        }
+        .form-label, .form-check-label, .list-group-item, .form-control, .form-select {
+            color: #fff;
+        }
+        .form-control, .form-select, .form-check-input {
+            background-color: #181a20;
+            border: 1px solid #5865f2;
+            color: #fff;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #7289da;
+            box-shadow: 0 0 0 0.2rem #5865f2;
+        }
+        .btn-primary, .btn-success, .btn-info {
+            background-color: #5865f2;
+            border: none;
+        }
+        .btn-primary:hover, .btn-success:hover, .btn-info:hover {
+            background-color: #7289da;
+        }
+        .list-group-item {
+            background-color: #181a20;
+            border: 1px solid #5865f2;
+        }
+        .ticket-historial {
+            max-height: 120px;
+            overflow-y: auto;
+        }
+        .section-title {
+            font-weight: bold;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .copy-btn {
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-4">
+    <h3 class="mb-4">🎫 Generador de Tickets - Gemini (Web)</h3>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    <form method="post" autocomplete="off">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Base de ejemplos:</label>
+                <input type="text" class="form-control d-inline-block w-auto" name="excel_file" value="{{ excel_default }}" readonly>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Ejemplos a usar:</label>
+                <input type="number" class="form-control" name="num_ejemplos" value="3" min="1" max="20">
+            </div>
+        </div>
+        <div class="section-title">Historial de Tickets Guardados</div>
+        <div class="ticket-historial mb-3">
+            <ul class="list-group">
+                {% for ticket in historial %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ ticket }}
+                    <a href="{{ url_for('download_ticket', filename=ticket) }}" class="btn btn-sm btn-info">Descargar</a>
+                </li>
+                {% else %}
+                <li class="list-group-item">No hay tickets guardados.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <hr class="my-4">
+        <div class="mb-3">
+            <label class="form-label">Pega aquí el chat completo con el usuario:</label>
+            <textarea class="form-control" name="chat" rows="5" required>{{ request.form.chat or '' }}</textarea>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary w-100">✨ Generar Ticket</button>
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label class="form-label">Solicitante:</label>
+                <input type="text" class="form-control" value="{{ solicitante }}" readonly>
+            </div>
+        </div>
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-10">
+                <label class="form-label">Asunto generado:</label>
+                <input type="text" class="form-control" value="{{ asunto }}" readonly id="asuntoField">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('asuntoField')">Copiar</button>
+            </div>
+        </div>
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-10">
+                <label class="form-label">Descripción generada:</label>
+                <textarea class="form-control" rows="3" readonly id="descField">{{ descripcion }}</textarea>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('descField')">Copiar</button>
+            </div>
+        </div>
+        <div class="row mb-3 align-items-center">
+            <div class="col-md-10">
+                <label class="form-label">Agente recomendado:</label>
+                <input type="text" class="form-control" value="{{ agente }}" readonly id="agenteField">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('agenteField')">Copiar</button>
+            </div>
+        </div>
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="solucionado" id="solucionadoCheck" {% if mensaje_cierre %}checked{% endif %} onchange="toggleCierre()">
+            <label class="form-check-label" for="solucionadoCheck">Marcar como solucionado</label>
+        </div>
+        <div class="row mb-3 align-items-center" id="cierreRow" style="display: {% if mensaje_cierre %}flex{% else %}none{% endif %};">
+            <div class="col-md-10">
+                <label class="form-label">Mensaje de cierre:</label>
+                <input type="text" class="form-control" value="{{ mensaje_cierre }}" readonly id="cierreField">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('cierreField')">Copiar</button>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-12 d-flex justify-content-between">
+                <button type="submit" name="guardar" class="btn btn-success w-25">💾 Guardar Ticket</button>
+                <button type="reset" class="btn btn-secondary w-25">🆕 Nuevo Ticket</button>
+                <a href="/" class="btn btn-danger w-25">❌ Salir</a>
+            </div>
+        </div>
+    </form>
+</div>
+<script>
+function copyToClipboard(elementId) {
+    var copyText = document.getElementById(elementId);
+    if (copyText) {
+        if (copyText.tagName === 'INPUT' || copyText.tagName === 'TEXTAREA') {
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            document.execCommand('copy');
+        } else {
+            navigator.clipboard.writeText(copyText.value || copyText.innerText);
+        }
+    }
+}
+function toggleCierre() {
+    var check = document.getElementById('solucionadoCheck');
+    var row = document.getElementById('cierreRow');
+    if (check.checked) {
+        row.style.display = 'flex';
+    } else {
+        row.style.display = 'none';
+    }
+}
+</script>
+</body>
+</html> 

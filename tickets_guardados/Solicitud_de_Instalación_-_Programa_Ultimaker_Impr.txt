@@ -1,0 +1,4 @@
+Asunto: Solicitud de Instalación - Programa Ultimaker (Impresoras 3D)
+
+Descripción:
+Hola, buenos días: El usuario solicita la instalación del programa Ultimaker para impresoras 3D. Este programa se utiliza para transferir archivos a la memoria SD de las impresoras. El usuario no posee los permisos necesarios para realizar la instalación por sí mismo. ID de AnyDesk: 1845479160. Agradeceríamos puedan proceder con la instalación remota. Saludos.
