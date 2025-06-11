@@ -114,6 +114,7 @@ def construir_prompt(ejemplos, chat_usuario):
         prompt += f"- Solicitante: {ej.get('Solicitante', 'Desconocido')}\n  Asunto: {ej['Título']}\n  Descripción: {ej['Descripción']}\n  Agente asignado: {ej.get('Agente', '')}\n"
     prompt += (
         f"\nChat con usuario:\n{chat_usuario}\n\n"
+        "IMPORTANTE: El campo 'solicitante' debe ser el nombre de la persona que inicia el chat o hace la consulta. Si no está claro, dedúcelo del chat, pero nunca pongas 'Desconocido'. "
         "Devuelve solo el ticket en formato JSON así: {\"solicitante\": \"...\", \"titulo\": \"...\", \"descripcion\": \"...\", \"agente\": \"...\"}"
     )
     return prompt
@@ -126,11 +127,23 @@ def extraer_json_de_texto(texto, agentes_validos=None):
             if agentes_validos is not None:
                 if not data.get('agente') or data['agente'] not in agentes_validos:
                     data['agente'] = 'No asignado'
+            # Mejorar la detección del solicitante
             if not data.get('solicitante') or data['solicitante'].lower() == 'desconocido':
                 desc = data.get('descripcion', '')
-                m = re.search(r'(?:usuario|solicitante) ([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)', desc)
-                if m:
-                    data['solicitante'] = m.group(1)
+                patrones = [
+                    r'^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+):',
+                    r'(?:usuario|solicitante|cliente) ([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)',
+                    r'^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)\s*:',
+                    r'^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)\s*$',
+                    # Nuevo patrón para nombre seguido de emoji y hora
+                    r'^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?: [A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)\s*[:\w\W]*\d{1,2}:\d{2}'
+                ]
+                for patron in patrones:
+                    m = re.search(patron, desc, re.MULTILINE)
+                    if m:
+                        data['solicitante'] = m.group(1)
+                        break
+            # Limpiar la descripción de referencias al solicitante
             if 'solicitante' in data and data['solicitante']:
                 patron = re.compile(r'(Solicitante: ?' + re.escape(data['solicitante']) + r'\.? ?)', re.IGNORECASE)
                 data['descripcion'] = patron.sub('', data.get('descripcion', ''), count=1).strip()
