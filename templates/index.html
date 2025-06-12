@@ -96,13 +96,13 @@
         <div class="row mb-3">
             <div class="col-md-12">
                 <label class="form-label">Solicitante:</label>
-                <input type="text" class="form-control" value="{{ solicitante }}" readonly>
+                <textarea class="form-control" rows="2" id="solicitanteField" style="white-space: pre-wrap;">{{ solicitante }}</textarea>
             </div>
         </div>
         <div class="row mb-3 align-items-center">
             <div class="col-md-10">
                 <label class="form-label">Asunto generado:</label>
-                <input type="text" class="form-control" value="{{ asunto }}" readonly id="asuntoField">
+                <textarea class="form-control" rows="2" id="asuntoField" style="white-space: pre-wrap;">{{ asunto }}</textarea>
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('asuntoField')">Copiar</button>
@@ -111,7 +111,7 @@
         <div class="row mb-3 align-items-center">
             <div class="col-md-10">
                 <label class="form-label">Descripción generada:</label>
-                <textarea class="form-control" rows="3" readonly id="descField">{{ descripcion }}</textarea>
+                <textarea class="form-control" rows="5" id="descField" style="white-space: pre-wrap;">{{ descripcion }}</textarea>
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('descField')">Copiar</button>
@@ -120,7 +120,7 @@
         <div class="row mb-3 align-items-center">
             <div class="col-md-10">
                 <label class="form-label">Agente recomendado:</label>
-                <input type="text" class="form-control" value="{{ agente }}" readonly id="agenteField">
+                <textarea class="form-control" rows="2" id="agenteField" style="white-space: pre-wrap;">{{ agente }}</textarea>
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('agenteField')">Copiar</button>
@@ -133,7 +133,7 @@
         <div class="row mb-3 align-items-center" id="cierreRow" style="display: {% if mensaje_cierre %}flex{% else %}none{% endif %};">
             <div class="col-md-10">
                 <label class="form-label">Mensaje de cierre:</label>
-                <input type="text" class="form-control" value="{{ mensaje_cierre }}" readonly id="cierreField">
+                <textarea class="form-control" rows="2" id="cierreField" style="white-space: pre-wrap;">{{ mensaje_cierre }}</textarea>
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="button" class="btn btn-info w-100 copy-btn" onclick="copyToClipboard('cierreField')">Copiar</button>
